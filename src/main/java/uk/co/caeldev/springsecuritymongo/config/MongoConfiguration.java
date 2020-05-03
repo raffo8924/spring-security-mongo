@@ -15,12 +15,18 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.token.ClientKeyGenerator;
 import org.springframework.security.oauth2.client.token.DefaultClientKeyGenerator;
 import org.springframework.security.oauth2.provider.token.AuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.DefaultAuthenticationKeyGenerator;
 import uk.co.caeldev.springsecuritymongo.services.SecurityContextService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableConfigurationProperties(MongoSettings.class)
@@ -85,8 +91,17 @@ public class MongoConfiguration {
         }
 
         @Bean
-        public PasswordEncoder passwordEncoder() {
-            return new BCryptPasswordEncoder();
+        public PasswordEncoder delegatingPasswordEncoder() {
+            PasswordEncoder defaultEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+            Map<String, PasswordEncoder> encoders = new HashMap<>();
+            encoders.put("bcrypt", new BCryptPasswordEncoder());
+            encoders.put("scrypt", new SCryptPasswordEncoder());
+
+            DelegatingPasswordEncoder passworEncoder = new DelegatingPasswordEncoder(
+                    "bcrypt", encoders);
+            passworEncoder.setDefaultPasswordEncoderForMatches(defaultEncoder);
+
+            return passworEncoder;
         }
 
         @Bean

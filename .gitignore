@@ -4,7 +4,9 @@
 *.ipr
 build/
 .gradle
-out/
+target/
+classes
+out
 
 # Mac
 .DS_Store
